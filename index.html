@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Misión PEN 2054 · El juego de la transición energética</title>
+<meta name="description" content="Juego interactivo sobre el Plan Energético Nacional 2024-2054 de Colombia. Sopa de letras, preguntas, minijuego y ruleta.">
+<style>
+:root{
+  --bg1:#071a12; --bg2:#0d2b3a; --card:#ffffff12; --line:#ffffff26;
+  --green:#3ddc84; --yellow:#ffd23f; --blue:#35a7ff; --red:#ff5d5d; --text:#f2fff8; --muted:#a9c9bb;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:var(--text);
+  background:radial-gradient(1200px 700px at 10% -10%,#14543a 0,transparent 60%),
+             radial-gradient(900px 600px at 110% 10%,#10506e 0,transparent 55%),
+             linear-gradient(160deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+}
+.wrap{max-width:760px;margin:0 auto;padding:18px 14px 50px}
+header{text-align:center;margin:6px 0 14px}
+header .tag{display:inline-block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--yellow);border:1px solid #ffd23f55;padding:4px 10px;border-radius:99px}
+h1{margin:10px 0 4px;font-size:clamp(26px,6vw,40px);line-height:1.1}
+h1 span{background:linear-gradient(90deg,var(--green),var(--yellow));-webkit-background-clip:text;background-clip:text;color:transparent}
+header p{margin:0;color:var(--muted);font-size:14px}
+.steps{display:flex;gap:6px;margin:14px 0 16px}
+.steps i{flex:1;height:8px;border-radius:9px;background:#ffffff1c;transition:.4s}
+.steps i.on{background:linear-gradient(90deg,var(--green),var(--yellow));box-shadow:0 0 12px #3ddc8466}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;backdrop-filter:blur(8px);box-shadow:0 10px 40px #0006}
+.stage{display:none;animation:pop .35s ease}
+.stage.show{display:block}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+h2{margin:0 0 4px;font-size:22px}
+.sub{color:var(--muted);margin:0 0 14px;font-size:14px}
+.btn{appearance:none;border:0;cursor:pointer;font:inherit;font-weight:700;color:#06210f;padding:13px 22px;border-radius:14px;
+  background:linear-gradient(135deg,var(--green),#b6f23d);box-shadow:0 6px 0 #1d8a4f,0 10px 24px #0005;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #1d8a4f}
+.btn.alt{background:linear-gradient(135deg,var(--yellow),#ff9f1c);box-shadow:0 6px 0 #b3690a,0 10px 24px #0005}
+.btn.alt:active{box-shadow:0 2px 0 #b3690a}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.center{text-align:center}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+
+/* intro */
+.video{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line);margin:8px 0 10px}
+.video svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+label{display:block;font-weight:600;margin:14px 0 6px}
+input[type=text]{width:100%;font:inherit;font-size:17px;padding:13px 14px;border-radius:12px;border:2px solid var(--line);background:#00000040;color:var(--text);outline:none}
+input[type=text]:focus{border-color:var(--green)}
+.err{color:var(--red);font-size:13px;min-height:18px;margin-top:6px}
+.rules{margin:12px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:13.5px}
+.rules li{background:#ffffff0d;border-radius:10px;padding:8px 10px}
+
+/* sopa */
+.sopa{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+#grid{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;width:min(100%,430px);touch-action:none;user-select:none;-webkit-user-select:none}
+#grid div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(13px,3.6vw,19px);
+  background:#00000035;border-radius:6px;cursor:pointer;transition:background .1s}
+#grid div.sel{background:var(--yellow);color:#222}
+#grid div.found{background:var(--green);color:#052612}
+#grid div.found.sel{background:#b6f23d}
+#words{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px;min-width:200px;flex:1}
+#words li{background:#ffffff12;border-radius:10px;padding:7px 10px;font-weight:700;font-size:13.5px;letter-spacing:.04em}
+#words li.done{background:#3ddc8433;text-decoration:line-through;color:var(--green)}
+.counter{font-weight:700;color:var(--yellow)}
+
+/* quiz */
+.q-top{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:8px}
+.q-text{font-size:20px;font-weight:700;margin:6px 0 14px}
+.opts{display:grid;gap:10px}
+.opt{font:inherit;text-align:left;color:var(--text);background:#ffffff14;border:2px solid var(--line);padding:13px 15px;border-radius:14px;cursor:pointer;transition:.15s}
+.opt:hover{border-color:var(--blue);background:#35a7ff22}
+.opt.ok{background:#3ddc8440;border-color:var(--green)}
+.opt.bad{background:#ff5d5d33;border-color:var(--red);animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.fb{min-height:44px;margin-top:12px;font-size:14.5px;color:var(--muted)}
+.fb b{color:var(--yellow)}
+
+/* minijuego */
+.hud{display:flex;justify-content:space-between;font-weight:800;font-size:18px;margin-bottom:8px}
+#arena{position:relative;height:340px;border-radius:16px;overflow:hidden;border:1px solid var(--line);touch-action:manipulation;user-select:none;-webkit-user-select:none;
+  background:linear-gradient(180deg,#0b3a5a,#10506e 60%,#14543a)}
+#arena .item{position:absolute;left:0;top:0;width:58px;height:58px;display:flex;align-items:center;justify-content:center;font-size:38px;cursor:pointer;will-change:transform}
+#arena .pop{position:absolute;font-weight:900;font-size:22px;pointer-events:none;animation:up .7s forwards}
+@keyframes up{to{transform:translateY(-40px);opacity:0}}
+#arena.flash{animation:redflash .3s}
+@keyframes redflash{50%{box-shadow:inset 0 0 0 6px var(--red)}}
+.overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:#000a;text-align:center;padding:16px;gap:10px}
+.overlay.show{display:flex}
+.bar{height:10px;border-radius:9px;background:#ffffff1c;overflow:hidden;margin-bottom:10px}
+.bar b{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--yellow));transition:width .2s}
+
+/* ruleta */
+.wheelbox{position:relative;width:min(100%,360px);margin:6px auto}
+#wheel{width:100%;height:auto;display:block;filter:drop-shadow(0 10px 20px #0008)}
+.pointer{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:34px solid var(--red);filter:drop-shadow(0 3px 3px #0007);z-index:2}
+.hub{position:absolute;left:50%;top:50%;width:62px;height:62px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35%,#fff,#ffd23f);border:4px solid #fff;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 0 4px #0003}
+.result{min-height:60px;text-align:center;font-size:20px;font-weight:800;margin-top:10px}
+.result small{display:block;font-weight:500;color:var(--muted);font-size:13px;margin-top:4px}
+
+/* comprobante */
+.cert{border:2px dashed var(--green);border-radius:18px;padding:22px 16px;text-align:center;background:linear-gradient(160deg,#3ddc8422,#ffd23f14)}
+.cert .big{font-size:56px}
+.cert h2{font-size:26px}
+.cert .name{font-size:28px;font-weight:900;color:var(--yellow);margin:6px 0;word-break:break-word}
+.cert .code{display:inline-block;font-family:Consolas,monospace;font-size:22px;letter-spacing:.12em;background:#00000050;padding:8px 16px;border-radius:10px;margin:8px 0}
+.cert p{margin:4px 0;color:var(--muted)}
+.confetti{position:fixed;top:-30px;font-size:24px;pointer-events:none;z-index:50;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}
+@media(max-width:520px){.rules{grid-template-columns:1fr}}
+@media print{body{background:#fff;color:#000}.steps,header,footer,.row{display:none}.cert{border-color:#000}.cert p,.cert .name{color:#000}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="tag">Charla · Plan Energético Nacional</span>
+    <h1>Misión <span>PEN 2054</span> ⚡</h1>
+    <p>El mapa de la transición energética de Colombia</p>
+  </header>
+
+  <div class="steps" id="steps"><i></i><i></i><i></i><i></i></div>
+
+  <!-- INTRO -->
+  <section class="stage show card" id="s0">
+    <h2>1) El tema de la charla ⚡</h2>
+    <p class="sub">Colombia ya es muy limpia generando electricidad… pero la transición se juega en cómo usamos la energía.</p>
+    <div class="video">
+      <svg viewBox="0 0 800 450" role="img" aria-label="Ilustración: turbinas eólicas, paneles solares y una fábrica, con los datos del PEN 2024-2054" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b3a5a"/><stop offset=".55" stop-color="#1b7a8f"/><stop offset="1" stop-color="#f7c948"/></linearGradient>
+          <radialGradient id="sun"><stop offset="0" stop-color="#fff6b0"/><stop offset=".5" stop-color="#ffd23f"/><stop offset="1" stop-color="#ffd23f00"/></radialGradient>
+          <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#35a7ff"/><stop offset="1" stop-color="#143d7a"/></linearGradient>
+        </defs>
+        <rect width="800" height="450" fill="url(#sky)"/>
+        <circle cx="640" cy="150" r="130" fill="url(#sun)"/>
+        <circle cx="640" cy="150" r="44" fill="#ffe27a"/>
+        <path d="M0 330 Q150 250 300 305 T560 290 T800 300 V450 H0Z" fill="#14543a"/>
+        <path d="M0 370 Q200 310 400 360 T800 345 V450 H0Z" fill="#0e3d2b"/>
+        <!-- turbinas -->
+        <g stroke="#f2fff8" stroke-width="5" stroke-linecap="round" fill="none">
+          <line x1="330" y1="300" x2="330" y2="170"/>
+          <g><animateTransform attributeName="transform" type="rotate" from="0 330 170" to="360 330 170" dur="7s" repeatCount="indefinite"/>
+            <line x1="330" y1="170" x2="330" y2="95"/><line x1="330" y1="170" x2="395" y2="207"/><line x1="330" y1="170" x2="265" y2="207"/></g>
+          <line x1="450" y1="310" x2="450" y2="215" stroke-width="4"/>
+          <g stroke-width="4"><animateTransform attributeName="transform" type="rotate" from="0 450 215" to="360 450 215" dur="5s" repeatCount="indefinite"/>
+            <line x1="450" y1="215" x2="450" y2="160"/><line x1="450" y1="215" x2="498" y2="243"/><line x1="450" y1="215" x2="402" y2="243"/></g>
+          <line x1="540" y1="305" x2="540" y2="240" stroke-width="3"/>
+          <g stroke-width="3"><animateTransform attributeName="transform" type="rotate" from="0 540 240" to="360 540 240" dur="4s" repeatCount="indefinite"/>
+            <line x1="540" y1="240" x2="540" y2="200"/><line x1="540" y1="240" x2="575" y2="260"/><line x1="540" y1="240" x2="505" y2="260"/></g>
+        </g>
+        <!-- paneles solares -->
+        <g fill="url(#panel)" stroke="#cfe9ff" stroke-width="2">
+          <polygon points="590,380 650,380 668,410 600,410"/><polygon points="670,380 730,380 748,410 680,410"/>
+          <polygon points="505,385 565,385 580,412 515,412"/>
+        </g>
+        <!-- fábrica / transporte fósil -->
+        <g fill="#2a2f35">
+          <rect x="40" y="290" width="150" height="75"/><rect x="60" y="235" width="24" height="60"/><rect x="110" y="255" width="20" height="40"/>
+          <rect x="30" y="362" width="170" height="10"/>
+        </g>
+        <g fill="#8a9099" opacity=".75">
+          <circle cx="72" cy="220" r="14"><animate attributeName="cy" values="225;170" dur="4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="4s" repeatCount="indefinite"/></circle>
+          <circle cx="90" cy="205" r="18"><animate attributeName="cy" values="210;140" dur="5s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="5s" repeatCount="indefinite"/></circle>
+          <circle cx="120" cy="240" r="12"><animate attributeName="cy" values="245;190" dur="4.5s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="4.5s" repeatCount="indefinite"/></circle>
+        </g>
+        <text x="115" y="338" text-anchor="middle" font-size="26">🛢️ ⛽</text>
+        <!-- título y datos -->
+        <text x="30" y="52" font-family="Segoe UI,Arial" font-weight="900" font-size="34" fill="#fff">PLAN ENERGÉTICO NACIONAL</text>
+        <text x="30" y="92" font-family="Segoe UI,Arial" font-weight="900" font-size="38" fill="#ffd23f">2024 → 2054</text>
+        <g font-family="Segoe UI,Arial" font-weight="800">
+          <rect x="30" y="112" width="250" height="34" rx="17" fill="#3ddc84"/><text x="155" y="135" text-anchor="middle" font-size="16" fill="#052612">77 % electricidad renovable</text>
+          <rect x="290" y="112" width="200" height="34" rx="17" fill="#ff5d5d"/><text x="390" y="135" text-anchor="middle" font-size="16" fill="#3a0000">69 % consumo fósil</text>
+          <rect x="500" y="112" width="170" height="34" rx="17" fill="#ffd23f"/><text x="585" y="135" text-anchor="middle" font-size="16" fill="#3a2500">45 % transporte</text>
+        </g>
+        <text x="770" y="432" text-anchor="end" font-family="Segoe UI,Arial" font-size="13" fill="#ffffffcc">Fuente: UPME (2025) · Carbono neutralidad 2050</text>
+      </svg>
+    </div>
+
+    <h2 style="margin-top:18px">2) Escribe tu nombre y juega 🎮</h2>
+    <ul class="rules">
+      <li>🔤 Sopa de letras</li>
+      <li>❓ Tres preguntas</li>
+      <li>🌞 Minijuego de energía</li>
+      <li>🎡 Ruleta de la suerte (1 giro)</li>
+    </ul>
+    <label for="nombre">Tu nombre completo</label>
+    <input type="text" id="nombre" maxlength="40" placeholder="Ej: Laura Gómez" autocomplete="name">
+    <div class="err" id="nombreErr"></div>
+    <div class="center"><button class="btn" id="start">¡Empezar! 🚀</button></div>
+  </section>
+
+  <!-- SOPA -->
+  <section class="stage card" id="s1">
+    <h2>🔤 Sopa de letras</h2>
+    <p class="sub">Encuentra las 8 palabras de la charla. Arrastra el dedo o el mouse sobre las letras (o toca la primera y luego la última).</p>
+    <div class="sopa">
+      <div id="grid"></div>
+      <ul id="words"></ul>
+    </div>
+    <p class="center counter" id="sopaCount">0 / 8</p>
+    <div class="center"><button class="btn" id="sopaNext" disabled>Siguiente ➜</button></div>
+  </section>
+
+  <!-- PREGUNTAS -->
+  <section class="stage card" id="s2">
+    <div class="q-top"><span id="qNum">Pregunta 1 de 3</span><span>❤️ Sin límite de intentos</span></div>
+    <div class="bar"><b id="qBar"></b></div>
+    <div class="q-text" id="qText"></div>
+    <div class="opts" id="qOpts"></div>
+    <div class="fb" id="qFb"></div>
+    <div class="center"><button class="btn" id="qNext" disabled>Continuar ➜</button></div>
+  </section>
+
+  <!-- MINIJUEGO -->
+  <section class="stage card" id="s3">
+    <h2>🌞 Atrapa la energía limpia</h2>
+    <p class="sub">Toca ☀️💨💧🌱⚡ (renovables, +1). ¡Evita 🛢️⛽🏭 (fósiles, −1)! Consigue <b>12 puntos</b> en 30 segundos.</p>
+    <div class="hud"><span>⭐ <span id="cScore">0</span>/12</span><span>⏱️ <span id="cTime">30</span>s</span></div>
+    <div id="arena">
+      <div class="overlay show" id="cOverlay">
+        <div style="font-size:44px">🌎</div>
+        <div id="cMsg" style="font-weight:700">¿Listo para limpiar la matriz energética?</div>
+        <button class="btn alt" id="cStart">Jugar</button>
+      </div>
+    </div>
+    <div class="center"><button class="btn" id="cNext" style="margin-top:14px" disabled>Siguiente ➜</button></div>
+  </section>
+
+  <!-- RULETA -->
+  <section class="stage card" id="s4">
+    <h2>🎡 Ruleta de la suerte</h2>
+    <p class="sub">¡Último reto! Tienes <b>un solo giro</b> para llevarte <b style="color:var(--yellow)">10 lukitas en efectivo</b> 💸 (si la suerte te acompaña).</p>
+    <div class="wheelbox">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="720" height="720"></canvas>
+      <div class="hub">⚡</div>
+    </div>
+    <div class="result" id="wResult"></div>
+    <div class="row">
+      <button class="btn alt" id="spin">¡GIRAR! 🎡</button>
+      <button class="btn" id="toCert" style="display:none">Ver mi comprobante ✅</button>
+    </div>
+  </section>
+
+  <!-- COMPROBANTE -->
+  <section class="stage card" id="s5">
+    <div class="cert" id="cert">
+      <div class="big">🏆</div>
+      <h2>¡Participación verificada!</h2>
+      <p>Se certifica que participó en la charla sobre el</p>
+      <p><b>Plan Energético Nacional 2024-2054</b></p>
+      <div class="name" id="cName"></div>
+      <p id="cDate"></p>
+      <div class="code" id="cCode"></div>
+      <p style="font-size:13px">📸 Tómale captura de pantalla y muéstrasela al presentador.</p>
+    </div>
+    <div class="row">
+      <button class="btn" onclick="window.print()">🖨️ Imprimir / guardar PDF</button>
+    </div>
+  </section>
+
+  <footer>Charla: «El mapa de la transición energética de Colombia» · Juan Gabriel Bueno Jaramillo · Universidad Tecnológica de Pereira<br>Fuente: UPME (2025). Plan Energético Nacional 2024-2054, Tomo I.</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let playerName = "";
+
+/* ---------- Navegación ---------- */
+function show(n){
+  document.querySelectorAll(".stage").forEach(s => s.classList.remove("show"));
+  $("s"+n).classList.add("show");
+  const bars = document.querySelectorAll("#steps i");
+  bars.forEach((b,i)=> b.classList.toggle("on", i < n));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function confetti(n=40){
+  const em = ["⚡","☀️","💧","🌱","💚","✨","🎉"];
+  for(let i=0;i<n;i++){
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.textContent = em[Math.floor(Math.random()*em.length)];
+    c.style.left = Math.random()*100+"vw";
+    c.style.animationDuration = (2+Math.random()*2.5)+"s";
+    c.style.animationDelay = Math.random()*0.8+"s";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),5500);
+  }
+}
+
+/* ---------- Intro ---------- */
+$("start").onclick = () => {
+  const v = $("nombre").value.trim();
+  if(v.length < 3){ $("nombreErr").textContent = "Escribe tu nombre para poder verificar tu participación."; return; }
+  playerName = v;
+  buildSopa();
+  show(1);
+};
+$("nombre").addEventListener("keydown", e => { if(e.key==="Enter") $("start").click(); });
+
+/* ---------- 1. Sopa de letras ---------- */
+const WORDS = ["TRANSPORTE","RENOVABLES","TERRITORIO","EFICIENCIA","ESCENARIO","CARBON","JUSTA","UPME"];
+const N = 12;
+let cells = [], placed = [], foundSet = new Set();
+
+function buildSopa(){
+  let grid;
+  for(let attempt=0; attempt<200; attempt++){
+    grid = Array.from({length:N},()=>Array(N).fill(""));
+    placed = [];
+    const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+    let ok = true;
+    for(const w of [...WORDS].sort((a,b)=>b.length-a.length)){
+      let done = false;
+      for(let t=0;t<200 && !done;t++){
+        const [dr,dc] = dirs[Math.floor(Math.random()*dirs.length)];
+        const r0 = Math.floor(Math.random()*N), c0 = Math.floor(Math.random()*N);
+        const r1 = r0+dr*(w.length-1), c1 = c0+dc*(w.length-1);
+        if(r1<0||r1>=N||c1<0||c1>=N) continue;
+        let fits = true;
+        for(let i=0;i<w.length;i++){
+          const ch = grid[r0+dr*i][c0+dc*i];
+          if(ch && ch!==w[i]){ fits=false; break; }
+        }
+        if(!fits) continue;
+        for(let i=0;i<w.length;i++) grid[r0+dr*i][c0+dc*i] = w[i];
+        placed.push({w,r0,c0,dr,dc});
+        done = true;
+      }
+      if(!done){ ok=false; break; }
+    }
+    if(ok) break;
+  }
+  const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(!grid[r][c]) grid[r][c] = abc[Math.floor(Math.random()*abc.length)];
+
+  const g = $("grid"); g.innerHTML = ""; cells = [];
+  for(let r=0;r<N;r++){
+    cells.push([]);
+    for(let c=0;c<N;c++){
+      const d = document.createElement("div");
+      d.textContent = grid[r][c]; d.dataset.r = r; d.dataset.c = c;
+      g.appendChild(d); cells[r].push(d);
+    }
+  }
+  const ul = $("words"); ul.innerHTML = "";
+  WORDS.forEach(w => { const li = document.createElement("li"); li.id = "w_"+w; li.textContent = w; ul.appendChild(li); });
+  foundSet = new Set(); updSopa();
+}
+
+function cellFrom(e){
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  if(el && el.parentNode === $("grid")) return [+el.dataset.r, +el.dataset.c];
+  return null;
+}
+function lineCells(a,b){
+  const dr = b[0]-a[0], dc = b[1]-a[1];
+  if(!(dr===0 || dc===0 || Math.abs(dr)===Math.abs(dc))) return null;
+  const n = Math.max(Math.abs(dr),Math.abs(dc));
+  const sr = Math.sign(dr), sc = Math.sign(dc), out = [];
+  for(let i=0;i<=n;i++) out.push([a[0]+sr*i, a[1]+sc*i]);
+  return out;
+}
+function paintSel(list){
+  document.querySelectorAll("#grid .sel").forEach(x=>x.classList.remove("sel"));
+  (list||[]).forEach(([r,c]) => cells[r][c].classList.add("sel"));
+}
+function evalLine(a,b){
+  const line = lineCells(a,b);
+  if(line){
+    const s = line.map(([r,c])=>cells[r][c].textContent).join("");
+    const rev = [...s].reverse().join("");
+    const hit = WORDS.find(w => (w===s || w===rev) && !foundSet.has(w));
+    if(hit){
+      foundSet.add(hit);
+      line.forEach(([r,c])=>cells[r][c].classList.add("found"));
+      $("w_"+hit).classList.add("done");
+      updSopa();
+    }
+  }
+  paintSel(null);
+}
+function updSopa(){
+  $("sopaCount").textContent = foundSet.size + " / " + WORDS.length;
+  $("sopaNext").disabled = foundSet.size < WORDS.length;
+  if(foundSet.size === WORDS.length && !$("sopaNext").dataset.done){ $("sopaNext").dataset.done = 1; confetti(25); }
+}
+(function sopaEvents(){
+  const g = $("grid");
+  let start = null, anchor = null, moved = false;
+  g.addEventListener("pointerdown", e => {
+    const c = cellFrom(e); if(!c) return;
+    start = c; moved = false;
+    g.setPointerCapture(e.pointerId);
+    paintSel([c]);
+    if(anchor) paintSel([anchor, c].filter(Boolean));
+  });
+  g.addEventListener("pointermove", e => {
+    if(!start) return;
+    const c = cellFrom(e); if(!c) return;
+    if(c[0]!==start[0] || c[1]!==start[1]) moved = true;
+    if(moved) paintSel(lineCells(start,c) || [start]);
+  });
+  g.addEventListener("pointerup", e => {
+    if(!start) return;
+    const c = cellFrom(e) || start;
+    if(moved){ evalLine(start,c); anchor = null; }
+    else if(anchor && (anchor[0]!==c[0] || anchor[1]!==c[1])){ evalLine(anchor,c); anchor = null; }
+    else if(anchor){ anchor = null; paintSel(null); }
+    else { anchor = c; paintSel([c]); }
+    start = null;
+  });
+  g.addEventListener("pointercancel", () => { start = null; });
+})();
+$("sopaNext").onclick = () => { show(2); loadQ(); };
+
+/* ---------- 2. Preguntas ---------- */
+const QUIZ = [
+  { q:"¿Qué porcentaje de la electricidad que se genera en Colombia viene de fuentes renovables?",
+    o:["45 %","77 %","23 %","90 %"], a:1,
+    ok:"¡Exacto! <b>77 %</b>. Pero ojo: el 69 % del consumo final de energía todavía es fósil." },
+  { q:"¿Qué sector consume más energía en Colombia?",
+    o:["Industria","Edificaciones","Transporte","Agro y minería"], a:2,
+    ok:"¡Bien! El <b>transporte</b> consume el 45 %, y el 90 % de su demanda es gasolina y diésel." },
+  { q:"El PEN 2024-2054 ¿obliga a invertir en los proyectos que propone?",
+    o:["Sí, es de obligatorio cumplimiento","Solo a las empresas públicas","No: es indicativo, orienta las decisiones","Solo en la región Caribe"], a:2,
+    ok:"¡Correcto! Es <b>indicativo</b>: no obliga, pero es el mapa oficial y se amarra a la NDC y a la Ley 2169." }
+];
+let qi = 0, qLocked = false;
+function loadQ(){
+  const it = QUIZ[qi]; qLocked = false;
+  $("qNum").textContent = "Pregunta "+(qi+1)+" de "+QUIZ.length;
+  $("qBar").style.width = (qi/QUIZ.length*100)+"%";
+  $("qText").textContent = it.q;
+  $("qFb").innerHTML = ""; $("qNext").disabled = true;
+  $("qNext").textContent = qi===QUIZ.length-1 ? "¡Al minijuego! ➜" : "Continuar ➜";
+  const box = $("qOpts"); box.innerHTML = "";
+  it.o.forEach((t,i) => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.textContent = t;
+    b.onclick = () => {
+      if(qLocked) return;
+      if(i === it.a){
+        qLocked = true; b.classList.add("ok");
+        $("qFb").innerHTML = "✅ " + it.ok; $("qNext").disabled = false;
+        $("qBar").style.width = ((qi+1)/QUIZ.length*100)+"%";
+      } else {
+        b.classList.add("bad"); b.disabled = true;
+        $("qFb").innerHTML = "❌ Casi… piensa en lo que se dijo en la charla e intenta otra vez.";
+      }
+    };
+    box.appendChild(b);
+  });
+}
+$("qNext").onclick = () => { if(++qi < QUIZ.length) loadQ(); else show(3); };
+
+/* ---------- 3. Minijuego ---------- */
+(function catchGame(){
+  const GOAL = 12, TIME = 30;
+  const GOOD = ["☀️","💨","💧","🌱","⚡"], BAD = ["🛢️","⛽","🏭"];
+  const arena = $("arena"), ov = $("cOverlay");
+  let score, time, items, running, last, spawn, timer, raf;
+
+  function reset(){ score = 0; time = TIME; items = []; spawn = 0.2;
+    arena.querySelectorAll(".item,.pop").forEach(e=>e.remove());
+    $("cScore").textContent = 0; $("cTime").textContent = TIME; }
+
+  function popText(x,y,t,col){
+    const p = document.createElement("div"); p.className="pop"; p.textContent=t; p.style.color=col;
+    p.style.left = x+"px"; p.style.top = y+"px"; arena.appendChild(p); setTimeout(()=>p.remove(),700);
+  }
+  function addItem(){
+    const good = Math.random() < 0.62;
+    const el = document.createElement("div"); el.className = "item";
+    const pool = good ? GOOD : BAD;
+    el.textContent = pool[Math.floor(Math.random()*pool.length)];
+    const W = arena.clientWidth;
+    const it = { el, good, x: Math.random()*(W-58), y:-60, v: 120+Math.random()*90 + (TIME-time)*3 };
+    el.addEventListener("pointerdown", ev => {
+      ev.preventDefault();
+      if(!running || it.dead) return;
+      it.dead = true; el.remove();
+      if(good){ score++; popText(it.x+10,it.y,"+1","#3ddc84"); }
+      else { score = Math.max(0,score-1); popText(it.x+10,it.y,"−1","#ff5d5d");
+             arena.classList.remove("flash"); void arena.offsetWidth; arena.classList.add("flash"); }
+      $("cScore").textContent = score;
+      if(score >= GOAL) end(true);
+    });
+    arena.appendChild(el); items.push(it);
+  }
+  function frame(t){
+    if(!running) return;
+    const dt = Math.min(0.05,(t-last)/1000); last = t;
+    spawn -= dt;
+    if(spawn <= 0){ addItem(); spawn = 0.45 + Math.random()*0.35; }
+    const H = arena.clientHeight;
+    items = items.filter(it => {
+      if(it.dead) return false;
+      it.y += it.v*dt;
+      it.el.style.transform = `translate(${it.x}px,${it.y}px)`;
+      if(it.y > H){ it.el.remove(); return false; }
+      return true;
+    });
+    raf = requestAnimationFrame(frame);
+  }
+  function end(win){
+    running = false; clearInterval(timer); cancelAnimationFrame(raf);
+    arena.querySelectorAll(".item").forEach(e=>e.remove());
+    $("cMsg").innerHTML = win ? "🎉 ¡Lo lograste!<br>Limpiaste la matriz con <b>"+score+"</b> puntos." :
+                                "⏱️ Se acabó el tiempo con "+score+" puntos.<br>¡Necesitas "+GOAL+", inténtalo otra vez!";
+    $("cStart").textContent = win ? "Jugar otra vez" : "Reintentar";
+    ov.classList.add("show");
+    if(win){ $("cNext").disabled = false; confetti(30); }
+  }
+  function begin(){
+    reset(); ov.classList.remove("show"); running = true; last = performance.now();
+    timer = setInterval(() => { $("cTime").textContent = --time; if(time <= 0) end(score >= GOAL); }, 1000);
+    raf = requestAnimationFrame(frame);
+  }
+  $("cStart").onclick = begin;
+  $("cNext").onclick = () => show(4);
+})();
+
+/* ---------- 4. Ruleta: UN SOLO GIRO, y el premio NUNCA puede caer ----------
+   Garantías en el código:
+   1) El premio es SIEMPRE el segmento 0 y el destino se elige solo entre los segmentos 1..N-1.
+   2) El punto de parada se mantiene al menos MARGIN (15 % del segmento) lejos de los bordes del premio.
+   3) Al terminar se verifica de nuevo el segmento real; si por cualquier razón fuera el 0, se corrige.
+   4) El mensaje que se muestra es SIEMPRE de agradecimiento, nunca de premio.
+   5) Un solo giro por persona/dispositivo (se guarda en localStorage). */
+(function ruleta(){
+  const cv = $("wheel"), ctx = cv.getContext("2d"), S = cv.width, R = S/2;
+  const SPUN_KEY = "pen2054_ruleta_girada";
+  const PRIZE_INDEX = 0;
+  let memSpun = false; // respaldo si el navegador bloquea localStorage
+  const store = {
+    get(){ try{ return localStorage.getItem(SPUN_KEY) || memSpun; }catch(e){ return memSpun; } },
+    set(){ memSpun = true; try{ localStorage.setItem(SPUN_KEY,"1"); }catch(e){} },
+    clear(){ memSpun = false; try{ localStorage.removeItem(SPUN_KEY); }catch(e){} }
+  };
+  const segs = [
+    "10\nLUKITAS", "GRACIAS\n¡SIGUE!", "SIGUE\nPARTICIPANDO", "¡CASI!\nGRACIAS",
+    "GRACIAS\nPOR VENIR", "OTRA VEZ\nSERÁ", "SIGUE\nPARTICIPANDO", "GRACIAS\n💚",
+    "¡CASI!\nSIGUE", "GRACIAS\nPOR JUGAR"
+  ];
+  const MSG = [
+    ["¡Gracias, sigue participando!","La energía limpia también necesita paciencia 😉"],
+    ["¡Uy, casi! Gracias, sigue participando","El premio pasó rozando…"],
+    ["Gracias por participar 💚","En la próxima charla será tu turno."],
+    ["¡Gracias, sigue participando!","La suerte es como la energía: hay que saber aprovecharla."],
+    ["Gracias, sigue participando ⚡","Hoy ganaste conocimiento, que no se gasta."]
+  ];
+  const N = segs.length, A = 2*Math.PI/N, MARGIN = A*0.15, TAU = 2*Math.PI;
+  let theta = 0, spinning = false;
+
+  const mod = x => ((x % TAU) + TAU) % TAU;
+  // segmento que queda bajo la flecha (arriba) para un ángulo de giro dado
+  const segUnderPointer = th => Math.floor(mod(-Math.PI/2 - th) / A) % N;
+
+  function draw(){
+    ctx.clearRect(0,0,S,S);
+    ctx.save(); ctx.translate(R,R); ctx.rotate(theta);
+    for(let i=0;i<N;i++){
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,R-8,i*A,(i+1)*A); ctx.closePath();
+      ctx.fillStyle = i===PRIZE_INDEX ? "#ffd23f" : (i%2 ? "#1f6f4f" : "#16495f");
+      ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "#ffffffaa"; ctx.stroke();
+      ctx.save(); ctx.rotate(i*A + A/2); ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      const lines = segs[i].split("\n");
+      if(i===PRIZE_INDEX){
+        ctx.fillStyle = "#3a2500"; ctx.font = "900 27px Segoe UI,Arial";
+        lines.forEach((ln,k)=> ctx.fillText(ln, R-34, (k-(lines.length-1)/2)*29));
+      } else {
+        ctx.fillStyle = "#fff"; ctx.font = "800 21px Segoe UI,Arial";
+        lines.forEach((ln,k)=> ctx.fillText(ln, R-34, (k-(lines.length-1)/2)*24));
+      }
+      ctx.restore();
+    }
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(R,R,R-6,0,TAU); ctx.lineWidth = 12; ctx.strokeStyle = "#ffffff"; ctx.stroke();
+    for(let i=0;i<20;i++){
+      const a = i/20*TAU;
+      ctx.beginPath(); ctx.arc(R+Math.cos(a)*(R-6), R+Math.sin(a)*(R-6), 6, 0, TAU);
+      ctx.fillStyle = i%2 ? "#ffd23f" : "#ff5d5d"; ctx.fill();
+    }
+  }
+  draw();
+
+  // Destino: nunca el premio; a veces pegadito (casi), siempre con margen respecto al borde.
+  function pickLosingTarget(){
+    const idx = Math.random() < 0.5
+      ? [1, N-1][Math.floor(Math.random()*2)]
+      : 1 + Math.floor(Math.random()*(N-1));
+    let lo = MARGIN, hi = A - MARGIN;
+    if(idx === 1)        { lo = MARGIN;        hi = MARGIN + A*0.15; }
+    else if(idx === N-1) { lo = A - MARGIN - A*0.15; hi = A - MARGIN; }
+    const off = lo + Math.random()*(hi-lo);
+    return idx*A + off;
+  }
+
+  function lockAfterSpin(msgHtml){
+    $("spin").style.display = "none";
+    $("toCert").style.display = "";
+    if(msgHtml) $("wResult").innerHTML = msgHtml;
+  }
+
+  // ¿ya giró antes en este dispositivo?  (?reset=1 en la URL lo reinicia para pruebas)
+  if(new URLSearchParams(location.search).get("reset")) store.clear();
+  if(store.get()){
+    lockAfterSpin("Ya usaste tu único giro 🎡<small>¡Gracias por participar, sigue participando en las próximas charlas!</small>");
+  }
+
+  $("spin").onclick = () => {
+    if(spinning || store.get()) return;
+    spinning = true; $("spin").disabled = true; $("wResult").innerHTML = "";
+    store.set();                                       // un solo giro
+
+    const targetLocal = pickLosingTarget();
+    const base = mod(-Math.PI/2 - targetLocal);
+    let delta = mod(base - mod(theta)) + TAU * (6 + Math.floor(Math.random()*3));
+    const t0 = performance.now(), dur = 6000, from = theta;
+    const ease = x => 1 - Math.pow(1-x, 4);
+    (function step(now){
+      const p = Math.min(1,(now-t0)/dur);
+      theta = from + delta*ease(p); draw();
+      if(p < 1) return requestAnimationFrame(step);
+      // verificación final: jamás puede terminar en el premio
+      if(segUnderPointer(theta) === PRIZE_INDEX){ theta += A; draw(); }
+      spinning = false;
+      const m = MSG[Math.floor(Math.random()*MSG.length)];
+      lockAfterSpin(m[0] + "<small>" + m[1] + "</small>");
+    })(t0);
+  };
+  $("toCert").onclick = finish;
+})();
+
+/* ---------- 5. Comprobante ---------- */
+function hashCode(str){
+  let h1 = 5381, h2 = 52711;
+  for(let i=0;i<str.length;i++){ const c = str.charCodeAt(i); h1 = (h1*33) ^ c; h2 = (h2*33) ^ c; }
+  const t = (Math.abs(h1)>>>0).toString(36) + (Math.abs(h2)>>>0).toString(36);
+  return t.toUpperCase().padEnd(8,"X").slice(0,8);
+}
+function finish(){
+  if(!playerName){ playerName = $("nombre").value.trim() || "Participante"; }
+  const now = new Date();
+  const fecha = now.toLocaleString("es-CO",{dateStyle:"long",timeStyle:"short"});
+  const code = hashCode(playerName.toLowerCase() + now.getTime());
+  $("cName").textContent = playerName;
+  $("cDate").textContent = fecha;
+  $("cCode").textContent = "PEN-" + code.slice(0,4) + "-" + code.slice(4);
+  document.querySelectorAll("#steps i").forEach(b=>b.classList.add("on"));
+  show(5); confetti(60);
+}
+</script>
+</body>
+</html>
